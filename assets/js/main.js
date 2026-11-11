@@ -221,6 +221,49 @@
   });
 
   /**
+   * Send contact form submissions through the configured Formspree endpoint.
+   */
+  const contactForm = document.querySelector('.contact-form');
+  if (contactForm) {
+    contactForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const loading = contactForm.querySelector('.loading');
+      const errorMessage = contactForm.querySelector('.error-message');
+      const sentMessage = contactForm.querySelector('.sent-message');
+      const submitButton = contactForm.querySelector('button[type="submit"]');
+
+      loading.classList.add('d-block');
+      errorMessage.classList.remove('d-block');
+      sentMessage.classList.remove('d-block');
+      submitButton.disabled = true;
+
+      try {
+        const response = await fetch(contactForm.action, {
+          method: 'POST',
+          body: new FormData(contactForm),
+          headers: { Accept: 'application/json' }
+        });
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          const errors = Array.isArray(result.errors) ? result.errors.map(error => error.message).join(' ') : '';
+          throw new Error(errors || 'Unable to send your message. Please try again.');
+        }
+
+        sentMessage.classList.add('d-block');
+        contactForm.reset();
+      } catch (error) {
+        errorMessage.textContent = error instanceof Error ? error.message : 'Unable to send your message. Please try again.';
+        errorMessage.classList.add('d-block');
+      } finally {
+        loading.classList.remove('d-block');
+        submitButton.disabled = false;
+      }
+    });
+  }
+
+  /**
    * Navmenu Scrollspy
    */
   let navmenulinks = document.querySelectorAll('.navmenu a');
